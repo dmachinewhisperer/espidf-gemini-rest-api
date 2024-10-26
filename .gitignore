@@ -1,0 +1,26 @@
+# Ignore build directories
+build/
+**/build/
+
+# Ignore Python scripts
+*.py
+
+# Ignore compiled object files
+*.o
+
+# Ignore binary files
+*.out
+*.exe
+
+# Ignore backup files
+*~
+*.bak
+*.tmp
+
+# Ignore IDE and editor-specific files
+.vscode/
+*.swp
+*.swo
+
+# Ignore log files
+*.log
