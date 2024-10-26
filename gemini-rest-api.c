@@ -136,6 +136,7 @@ static void extract_file_name_and_type(const char *path, char *file_name, char *
 static char* extract_text_from_json(cJSON *root) {
     char* result = NULL;
     
+    
     if (!root) {
         ESP_LOGE(TAG, "JSON parsing failed: %s", cJSON_GetErrorPtr());
         return NULL;
@@ -636,6 +637,47 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     //int res_len = esp_http_client_read_response(client, conf->gen_text, MAX_GENERATED_TEXT_LENGTH);
     //ESP_LOGI(TAG, "res = %s\nread %d bytes response", conf->gen_text, res_len);
     conf->gen_text[MAX_HTTP_RESPONSE_LENGTH] = '\0';
+
+    //process the response to recover the text part. In the case where 
+    //the response is due to a file upload request,  recover the file upload uri
+    cJSON *json = cJSON_Parse(conf->gen_text);
+    if (!json) {
+        printf("Failed to parse JSON\n");
+        ret = ESP_FAIL;
+        goto cleanup;
+    }
+
+    if(cJSON_GetObjectItem(json, "candidates")){
+        // this response type is due to a prior text prompt
+        //see the api response format at: https://ai.google.dev/gemini-api/docs
+        //NOTE: gen_text is dynamically allocated it is your responsibility to free it
+
+            char *gen_text = extract_text_from_json(json);
+            strncpy(conf->gen_text, gen_text, MAX_HTTP_RESPONSE_LENGTH);
+            free(gen_text);
+    }
+
+    cJSON *file_obj = cJSON_GetObjectItem(json, "file");
+    if(file_obj){
+        //this response type is sent after a file upload. it contains the file uri
+        //in the format
+        /**
+                     * {
+                        "file": {
+                            "uri": ""
+                        }
+                    }
+            */
+        char *file_uri = cJSON_GetObjectItem(file_obj, "uri")->valuestring;
+        if(file_uri){
+            if(conf->file_uri){
+                free(conf->file_uri);
+            }
+            conf->file_uri = strdup(file_uri);
+        }
+        
+    }
+
 #if 0
     //if chatting, save model response history in conf->chat_history
     if(conf->prompt_mode == CHAT){
@@ -670,6 +712,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
 cleanup:
     if (post_data) free(post_data);
     //if (post_data) cJSON_free(post_data);
+    if (json) cJSON_Delete(json);
     if (root) cJSON_Delete(root); 
     if(conf->file_uri) free(conf->file_uri);
     if(conf->file_upload_url) free(conf->file_upload_url);
