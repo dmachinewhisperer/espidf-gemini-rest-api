@@ -4,24 +4,20 @@ This project is a REST API component for prompting the Google Gemini language mo
 
 ## Features
 
-1. **Text-Only Prompting**
-   - Status: **Working**
-   - Send plain text prompts to the Google Gemini LLM.
+| Feature                          | Description                                         | Status  |
+|----------------------------------|-----------------------------------------------------|---------|
+| **Text-Only Prompting**          | Text only prompting.   | ✅      |
+| **Text with Attached File Prompting** |                                                   |         |
+| - Image                          | Support for prompting with image files.            | ⚠️      |
+| - Document                       | Support for prompting with document files.         | ⚠️      |
+| - Media                          | Support for prompting with audio/video.            | ⚠️      |
+| **Text with Uploaded File Prompting** | Prompts on files uploaded to gemini's storage server. | ⚠️      |
 
-2. **Text with Attached File Prompting**
-   - **Image**: 
-     - Status: **WIP**
-     - Support for prompting with image files.
-   - **Document**: 
-     - Status: **WIP**
-     - Support for prompting with document files.
-   - **Media**: 
-     - Status: **WIP**
-     - Support for prompting with audio/video.
 
-3. **Text with Uploaded File Prompting**
-   - Status: **WIP** (Work in Progress)
-   - Enables users to send prompts along with uploaded files.
+- ✅ **Stable**: Feature is stable and fully functional.
+- 🔄 **Working**: Feature is actively being developed and tested.
+- ⚠️ **WIP**: Work in Progress, features are still being worked on.
+
 
 ## Using
 1. Include as you would an ESPIDF component in your project. [See how.](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/build-system.html)
