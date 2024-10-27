@@ -1,0 +1,29 @@
+menu "GEMINI REST API CONFIGURATION"
+    config GEMINI_MODEL_NAME
+        string "Model name"
+        default "gemini-1.5-flash"
+        help
+            Gemini variant to prompt. Some variants are not free
+    
+    config GEMINI_API_KEY
+        string "Gemini API Key"
+        default ""
+        help
+            Your Gemini API key for authentication.            
+
+    config SPIFFS_CHECK_ON_START
+        bool "Run SPIFFS_check on every start-up"
+        default y
+        help
+            If this config item is set, esp_spiffs_check() will be run on every start-up.
+            Slow on large flash sizes.
+
+    config MAX_ATTACHABLE_FILE_SIZE
+        int "Maximum file size attachable to a prompt (KB)"
+        default 10
+        range 1 50
+        help
+            Maximum size for files to be processed.
+            Note: Larger files will require more memory.
+
+endmenu
