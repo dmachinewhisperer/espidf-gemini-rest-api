@@ -1,6 +1,6 @@
 # ESPIDF Google Gemini LLM Prompting Component
 
-This project is a REST API component for prompting the Google Gemini language model from an ESP32 microcontroller.
+This project is a REST API component for prompting the Google's Gemini LLM from any ESP32-based microcontroller.
 
 ## Features
 
@@ -21,15 +21,15 @@ This project is a REST API component for prompting the Google Gemini language mo
 
 
 ## Using
-1. Include as you would an ESPIDF component in your project. [See how.](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/build-system.html)
+Include as you would an ESPIDF component in your project. [See how.](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/build-system.html)
 
 ## Resources
-1. [**Component and Documentation**]()
-2. **Examples**
-   - [simple_chat_client]()
-   - [text_wt_file_prompting]()
+1. [**Component**](https://github.com/dmachinewhisperer/espidf-gemini-rest-api/tree/master/gemini-rest-api) and [**Documentation**](https://github.com/dmachinewhisperer/espidf-gemini-rest-api/tree/master/gemini-rest-api#documentation-wip)
+2. **Examples using the component**
+   - [simple_chat_client](https://github.com/dmachinewhisperer/espidf-gemini-rest-api/tree/master/examples/simple-chat-client)
+   - [prompting_wt_files](https://github.com/dmachinewhisperer/espidf-gemini-rest-api/tree/master/examples/simple-chat-client)
    - [vision]()
-3. **Gemini API documentation**
+3. [**Gemini API documentation**](https://ai.google.dev/gemini-api/doc)
 
 ## Issues and Contributing
 Open issues/send a PR.
