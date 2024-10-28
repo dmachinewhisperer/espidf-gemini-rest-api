@@ -206,7 +206,11 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
             //for uploads, the server includes "x-goog-upload-url" in the header.
             //retrive it whenever present and store it in a the client->user_data->file_uri
             //recall evt->user_data is a pointer to client->user_data
-            if (strcmp(evt->header_key, "x-goog-upload-url") == 0) {
+
+            //HTTP/1.1 specification (RFC 7230) headers are case insensitive. 
+            //TODO: Application have to take care of ths
+            //if (strcmp(evt->header_key, "x-goog-upload-url") == 0) {
+            if (strcmp(evt->header_key, "X-Goog-Upload-URL") == 0) {
                 if(((PromptConf *)evt->user_data)->file_upload_url){
                     free(((PromptConf *)evt->user_data)->file_upload_url);
                 }
@@ -339,7 +343,10 @@ esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client){
     size_t file_size; 
     uint8_t *file = NULL;
     esp_err_t ret = ESP_FAIL;
-    
+    char *post_data = NULL;
+    cJSON* json = NULL;
+    cJSON* root = NULL; 
+    static char chat_count = 0;
 
     //NOTE: file is dynamically allocated it is your responsibility to free it
     ret = read_file_to_buffer(conf->file_path, &file, &file_size, MAX_FILE_SIZE);
@@ -364,7 +371,8 @@ esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client){
     esp_http_client_set_header(client, "X-Goog-Upload-Header-Content-Type", conf->mime_type);
     esp_http_client_set_header(client, "Content-Type", "application/json");
  
-    cJSON *root = cJSON_CreateObject();
+    //cJSON *root = cJSON_CreateObject();
+    root = cJSON_CreateObject();
     cJSON *__file = cJSON_CreateObject();
     //TODO
     if(!root || !__file){
@@ -376,7 +384,7 @@ esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client){
     cJSON_AddStringToObject(__file, "display_name", file_name);
     
     //NOTE: post_data is dynamically allocated it is your responsibility to free it
-    char *post_data = NULL;
+    
     post_data = cJSON_Print(root);
     if(!post_data){
         ESP_LOGE(TAG, "Could not allocate space for post_data");
@@ -432,7 +440,8 @@ esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client){
         }
 
         //process response in conf->text
-        cJSON *json = cJSON_Parse(conf->gen_text);
+        //cJSON *json = cJSON_Parse(conf->gen_text);
+        json = cJSON_Parse(conf->gen_text);
         cJSON *file_obj = cJSON_GetObjectItem(json, "file");
         if(file_obj){
             //this response type is sent after a file upload. it contains the file uri
@@ -482,6 +491,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     }   
 
     char *post_data = NULL;
+    cJSON *json = NULL;
     esp_err_t ret = ESP_FAIL; 
 
     cJSON *root = cJSON_CreateObject();
@@ -555,7 +565,9 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     cJSON_AddStringToObject(file_meta, "file_uri", conf->file_uri);
     cJSON_AddItemToObject(file_part, "file_data", file_meta);
     cJSON_AddItemToArray(user_parts, file_part);    
-  
+    
+    //indicate uploaded artifact have been built into prompt
+    conf->artifacts = NONE; 
     }
 
     char generate_url[256];
@@ -639,7 +651,8 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     conf->gen_text[MAX_HTTP_RESPONSE_LENGTH] = '\0';
 
     //process the response to recover the text part.
-    cJSON *json = cJSON_Parse(conf->gen_text);
+    //cJSON *json = cJSON_Parse(conf->gen_text);
+    json = cJSON_Parse(conf->gen_text);
     if (!json) {
         printf("Failed to parse JSON\n");
         ret = ESP_FAIL;
@@ -703,6 +716,11 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
         cJSON_AddStringToObject(model_text, "text", conf->gen_text);
         cJSON_AddItemToArray(model_parts, model_text);       
 
+        //keep track of chat items and trim when needed
+        chat_count +=2;
+        if(chat_count > 6){
+            cJSON_DeleteItemFromArray(contents, 0);
+        }
     }
 
 
