@@ -6,13 +6,10 @@ This project is a REST API component for prompting the Google's Gemini LLM from 
 
 | Feature                          | Description                                         | Status  |
 |----------------------------------|-----------------------------------------------------|---------|
-| **Text-Only Prompting**          | Text only prompting(oneshot)   | ✅      |
-| **Text with Attached File Prompting** |                                                   |         |
-| - Image                          | Support for prompting with image files.            | ⚠️      |
-| - Document                       | Support for prompting with document files.         | ⚠️      |
-| - Media                          | Support for prompting with audio/video.            | ⚠️      |
-| **Text with Uploaded File Prompting** | Prompts on files uploaded to gemini's storage server. | ⚠️      |
-| **Structure Response Prompting** | Prompts with specified output response in json | ⚠️      |
+| **Text-Only Prompting**          | Text only prompting(oneshot)   |✅      |
+| **Text with Attached File Prompting** | Prompting with attached file encoded in base64      | ⚠️      |
+| **Text with Uploaded File Prompting** | Prompts on files uploaded to gemini's storage server. | ✅      |
+| **Structured Response Prompting** | Prompts with specified output response in json | ⚠️      |
 | **Chat (text and files)** | Model remembers previous prompts  | ✅      |
 
 - ✅ **Stable**: Feature is stable and fully functional.
