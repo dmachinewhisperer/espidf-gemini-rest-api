@@ -24,3 +24,6 @@ build/
 
 # Ignore log files
 *.log
+
+#ignore sdkconfig due to possible api-key leak
+sdkconfig*
