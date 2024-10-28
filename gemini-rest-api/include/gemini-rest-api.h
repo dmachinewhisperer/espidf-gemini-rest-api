@@ -7,21 +7,17 @@
 #include "esp_http_client.h"
 
 
-#define MAX_URL_LENGTH 256        /**< Maximum length for URLs. */
-#define MAX_FILE_PATH_LENGTH 64       /**< Maximum length for file paths. */
-#define MAX_API_KEY_LENGTH 64    /**< Maximum length for API keys. */
-#define MAX_MIME_TYPE_LENGTH 20    /**< Maximum length for MIME types. */
-//#define MAX_FILE_SIZE (1024 * 50)  /**< Maximum file size attachable (50 KB). */
-#define MAX_FILE_METADATA_LENGTH 10 /**< Maximum length for file name and file extension. */
-//#define MAX_GENERATED_TEXT_LENGTH (1024 * 10) /**< Maximum length for generated text (10 KB) */
+#define MAX_URL_LENGTH 256                 /**< Maximum length for URLs. */
+#define MAX_FILE_PATH_LENGTH 64            /**< Maximum length for file paths. */
+#define MAX_API_KEY_LENGTH 64              /**< Maximum length for API keys. */
+#define MAX_MIME_TYPE_LENGTH 20             /**< Maximum length for MIME types. */
+#define MAX_FILE_SIZE (1024 * 30)          /**< Maximum file size attachable (30 KB). */
+#define MAX_FILE_METADATA_LENGTH 10         /**< Maximum length for file name and file extension. */
+#define MAX_CA_CERT_LENGTH 2048             /**< Maximum length for CA certificates. */
+#define MAX_GENERATED_TEXT_LENGTH (1024 * 3) /**< Maximum length for generated text (3 KB). */
+#define MAX_HTTP_RESPONSE_META 1024         /**< Maximum length for HTTP response metadata. */
+#define MAX_HTTP_RESPONSE_LENGTH (MAX_GENERATED_TEXT_LENGTH + MAX_HTTP_RESPONSE_META) /**< Maximum HTTP response length. */
 
-#define MAX_FILE_SIZE (1024 * 5)  /**< Maximum file size attachable (5 KB). */
-//#define MAX_FILE_SIZE MAX_ATTACHABLE_FILE_SIZE
-//#define MAX_GENERATED_TEXT_LENGTH (1024 * 1 ) /**< Maximum length for generated text (1 KB) */
-#define MAX_CA_CERT_LENGHT  2048
-#define MAX_GENERATED_TEXT_LENGTH (1024 * 3)
-#define MAX_HTTP_RESPONSE_META 1024
-#define MAX_HTTP_RESPONSE_LENGTH (MAX_GENERATED_TEXT_LENGTH + MAX_HTTP_RESPONSE_META)
 typedef enum {
     ONESHOT,
     CHAT
