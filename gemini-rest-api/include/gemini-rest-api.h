@@ -15,7 +15,7 @@
 #define MAX_FILE_METADATA_LENGTH 10 /**< Maximum length for file name and file extension. */
 //#define MAX_GENERATED_TEXT_LENGTH (1024 * 10) /**< Maximum length for generated text (10 KB) */
 
-#define MAX_FILE_SIZE (1 * 1)  /**< Maximum file size attachable (1 KB). */
+#define MAX_FILE_SIZE (1024 * 5)  /**< Maximum file size attachable (5 KB). */
 //#define MAX_FILE_SIZE MAX_ATTACHABLE_FILE_SIZE
 //#define MAX_GENERATED_TEXT_LENGTH (1024 * 1 ) /**< Maximum length for generated text (1 KB) */
 #define MAX_CA_CERT_LENGHT  2048
@@ -75,7 +75,7 @@ void session_end(PromptConf conf, esp_http_client_handle_t client);
  * @return esp_err_t ESP_OK on success, or ESP_FAIL if an error occurs during 
  *         the upload process or if the file does not exist.
  */
-esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client);
+esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client);
 
 
 
