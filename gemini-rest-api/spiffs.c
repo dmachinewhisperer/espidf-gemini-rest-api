@@ -111,9 +111,9 @@ esp_err_t read_file_to_buffer(const char *file_path, uint8_t **buffer, size_t *f
         fclose(f);
         return ESP_FAIL;
     }
-    
-    if (fread(*buffer, 1, *file_size, f) != *file_size) {
-        ESP_LOGE(TAG, "Failed to read file");
+    int x = fread(*buffer, 1, *file_size, f);
+    if ( x != *file_size) {
+        ESP_LOGE(TAG, "Failed to read file: fsize: %d read: %d", *file_size, x);
         free(*buffer);
         fclose(f);
         return ESP_FAIL;
