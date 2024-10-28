@@ -316,7 +316,7 @@ void session_end(PromptConf conf, esp_http_client_handle_t client) {
 /**
  * @todo:
  */
-esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
+esp_err_t upload_file(PromptConf *conf, esp_http_client_handle_t client){
     //check if file_path is set and file exists
 
     //check if client is initialized
@@ -328,7 +328,7 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
     //char *ptr = (char *)client->user_data;
 
     struct stat st;
-    if (stat(conf.file_path, &st) != 0) {
+    if (stat(conf->file_path, &st) != 0) {
         ESP_LOGE(TAG, "file_path not set in conf or file does not exist");
         return ESP_FAIL;
     }
@@ -342,7 +342,7 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
     
 
     //NOTE: file is dynamically allocated it is your responsibility to free it
-    ret = read_file_to_buffer(conf.file_path, &file, &file_size, MAX_FILE_SIZE);
+    ret = read_file_to_buffer(conf->file_path, &file, &file_size, MAX_FILE_SIZE);
     if (ret !=ESP_OK) {
         ESP_LOGE(TAG, "Failed to read file");
         return ret;
@@ -353,7 +353,7 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
     char file_type[MAX_FILE_METADATA_LENGTH];
     char file_size_str[MAX_FILE_METADATA_LENGTH];
     snprintf(file_size_str, sizeof(file_size_str), "%zu", file_size);
-    extract_file_name_and_type(conf.file_path, file_name, file_type);
+    extract_file_name_and_type(conf->file_path, file_name, file_type);
 
 
     //initial resumable request
@@ -361,7 +361,7 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
     esp_http_client_set_header(client, "X-Goog-Upload-Protocol", "resumable");
     esp_http_client_set_header(client, "X-Goog-Upload-Command", "start");
     esp_http_client_set_header(client, "X-Goog-Upload-Header-Content-Length", file_size_str);
-    esp_http_client_set_header(client, "X-Goog-Upload-Header-Content-Type", conf.mime_type);
+    esp_http_client_set_header(client, "X-Goog-Upload-Header-Content-Type", conf->mime_type);
     esp_http_client_set_header(client, "Content-Type", "application/json");
  
     cJSON *root = cJSON_CreateObject();
@@ -387,22 +387,22 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
 
     //modify url of client to point to upload server
     char url[MAX_URL_LENGTH];
-    snprintf(url, sizeof(url), "%s/upload/v1beta/files?key=%s", base_url, conf.api_key);
+    snprintf(url, sizeof(url), "%s/upload/v1beta/files?key=%s", base_url, conf->api_key);
     esp_http_client_set_url(client, url);
     ret = esp_http_client_perform(client);
 
     //"esp_http_client_perform" blocks until response is recieved
     //the upload server sends back the upload url in the header of response
     //in the handling of HTTP_EVENT_ON_HEADER, whenever the "x-goog-upload-url"
-    //header occurs, it is stored in the conf.user_data.file_upload_url
+    //header occurs, it is stored in the conf->user_data.file_upload_url
     if (ret !=ESP_OK) {
         ESP_LOGI(TAG, "Initial resumable failed");
         goto cleanup;
     }
     
     //file upload
-    if (!conf.file_upload_url) {
-        ESP_LOGE(TAG, "File upload url not set in conf.user_data.file_upload_url");
+    if (!conf->file_upload_url) {
+        ESP_LOGE(TAG, "File upload url not set in conf->user_data.file_upload_url");
         ret = ESP_FAIL;
         goto cleanup;
     }
@@ -423,13 +423,36 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
         esp_http_client_set_post_field(client, (char*)file, file_size);
 
         //point the client to the upload url
-        esp_http_client_set_url(client, conf.file_upload_url);
+        esp_http_client_set_url(client, conf->file_upload_url);
         
         ret = esp_http_client_perform(client);
         if (ret!=ESP_OK) {
             ESP_LOGE(TAG, "File upload failed");
             goto cleanup;
         }
+
+        //process response in conf->text
+        cJSON *json = cJSON_Parse(conf->gen_text);
+        cJSON *file_obj = cJSON_GetObjectItem(json, "file");
+        if(file_obj){
+            //this response type is sent after a file upload. it contains the file uri
+            //in the format
+            /**
+                         * {
+                            "file": {
+                                "uri": ""
+                            }
+                        }
+                */
+            char *file_uri = cJSON_GetObjectItem(file_obj, "uri")->valuestring;
+            if(file_uri){
+                if(conf->file_uri){
+                    free(conf->file_uri);
+                }
+                conf->file_uri = strdup(file_uri);
+            }
+            
+    }        
 
         esp_http_client_delete_header(client, "Content-Length");
         esp_http_client_delete_header(client, "X-Goog-Upload-Offset");
@@ -438,8 +461,10 @@ esp_err_t upload_file(PromptConf conf, esp_http_client_handle_t client){
         ret = ESP_OK;
 cleanup:
     if (post_data) free(post_data);
+    if(json) cJSON_Delete(json);
     if (root) cJSON_Delete(root);
     if (file) free(file);
+    
     
     return ret;    
 
@@ -507,7 +532,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
 
 
     //TODO: validate mime_type with file extension
-#if 0
+
     if(conf->artifacts == UPLOADED){
         //in this prompting style, the user have already uploaded 
         //a file using the upload_file() function and the conf->file_uri is set
@@ -532,7 +557,6 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     cJSON_AddItemToArray(user_parts, file_part);    
   
     }
-  #endif
 
     char generate_url[256];
     int len = snprintf(generate_url, sizeof(generate_url), 
@@ -614,8 +638,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
     //ESP_LOGI(TAG, "res = %s\nread %d bytes response", conf->gen_text, res_len);
     conf->gen_text[MAX_HTTP_RESPONSE_LENGTH] = '\0';
 
-    //process the response to recover the text part. In the case where 
-    //the response is due to a file upload request,  recover the file upload uri
+    //process the response to recover the text part.
     cJSON *json = cJSON_Parse(conf->gen_text);
     if (!json) {
         printf("Failed to parse JSON\n");
@@ -636,7 +659,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
             strncpy(conf->gen_text, gen_text, MAX_HTTP_RESPONSE_LENGTH);
             free(gen_text);
     }
-
+#if 0
     cJSON *file_obj = cJSON_GetObjectItem(json, "file");
     if(file_obj){
         //this response type is sent after a file upload. it contains the file uri
@@ -657,7 +680,7 @@ esp_err_t prompt(char *text, PromptConf *conf, esp_http_client_handle_t client){
         }
         
     }
-
+#endif
 
     //if chatting, save model response history in conf->chat_history
     if(conf->prompt_mode == CHAT){
